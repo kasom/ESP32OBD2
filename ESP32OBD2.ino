@@ -111,7 +111,7 @@ Arduino_RGB_Display *gfx = new Arduino_RGB_Display(
     TFT_WIDTH /* width */, TFT_HEIGHT /* height */, rgbpanel);
 
 void updateProgressCallBack(size_t currSize, size_t totalSize) {
-  Serial.printf("CALLBACK:  Update process at %d of %d bytes...\n", currSize, totalSize);
+  printf("CALLBACK:  Update process at %d of %d bytes...\n", currSize, totalSize);
 }
 
 #define DUK_ADD_FUNCTION(FUNCTION_NAME, NATIVE_FUNCTION, PARAM_COUNT) \

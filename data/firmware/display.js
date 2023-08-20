@@ -87,6 +87,45 @@ function noFormat(s) {
 	return s;
 }
 
+// valueNo 1-3 => min / current / max
+function defaultColor(valueNo,value) {
+	if (valueNo==2) return TFT_CONST.COLOR.WHITE;
+
+	return TFT_CONST.COLOR.DARKGREY;
+}
+
+function defaultBgColor(valueNo,value) {
+	return TFT_CONST.COLOR.BLACK;
+}
+
+function hvBatSoCColor(valueNo,value) {
+	if (valueNo==2) {
+		if (value>80) {
+			return TFT_CONST.COLOR.GREEN;
+		} else if (value>60) {
+			return TFT_CONST.COLOR.GREENYELLOW;
+		} else if (value>40) {
+			return TFT_CONST.COLOR.YELLOW;
+		} else if (value>20) {
+			return TFT_CONST.COLOR.RED;
+		} else {
+			return TFT_CONST.COLOR.BLACK;
+		}
+	}
+	return defaultColor(valueNo,value);
+}
+
+function hvBatSoCBgColor(valueNo,value) {
+	if (valueNo==2) {
+		if (value>20) {
+			return TFT_CONST.COLOR.BLACK;
+		} else {
+			return TFT_CONST.COLOR.RED;
+		}
+	}
+	return defaultBgColor(valueNo,value);
+}
+
 var requestList = {
 	'HV Bat Volt': {
 		label: 'HVB Volt (V)',
@@ -118,7 +157,9 @@ var requestList = {
 		req: { canId: CAN_ID_BMS, msg: [0x03, 0x22, 0xb0, 0x46, 0xaa, 0xaa, 0xaa, 0xaa] },
 		expect: { canId: CAN_ID_BMS + 8, prefix: [0x05, 0x62, 0xb0, 0x46] },
 		decoder: function (id, m) { return ((m[4] << 8) | m[5]) * 0.1 },
-		format: oneDecimal
+		format: oneDecimal,
+		color: hvBatSoCColor,
+		bgColor: hvBatSoCBgColor
 	},
 	'HV Bat Cell Min': {
 		label: 'HVB CellMin(V)',
@@ -390,6 +431,22 @@ function prefixMatch(data, prefix) {
 	return true;
 }
 
+function getValueTextColor(requestName,valueNo,value) {
+	if (typeof requestList[requestName].color=='function') {
+		return requestList[requestName].color(valueNo,value);
+	} else {
+		return defaultColor(valueNo,value);
+	}
+}
+
+function getValueTextBgColor(requestName,valueNo,value) {
+	if (typeof requestList[requestName].bgColor=='function') {
+		return requestList[requestName].bgColor(valueNo,value);
+	} else {
+		return defaultBgColor(valueNo,value);
+	}
+}
+
 function doNextRequest() {
 	// Draw the last request after the new request has been sent.
 
@@ -412,11 +469,12 @@ function doNextRequest() {
 
 	while (toDraw.length != 0) {
 		// update the display
+		var name=toDraw[0];
 		var d = requestList[toDraw[0]];
 
-		drawGridValue1(d.disp.c, d.disp.r, d.format(d.valueMin), TFT_CONST.COLOR.DARKGREY, TFT_CONST.COLOR.BLACK);
-		drawGridValue2(d.disp.c, d.disp.r, d.format(d.value), TFT_CONST.COLOR.WHITE, TFT_CONST.COLOR.BLACK);
-		drawGridValue3(d.disp.c, d.disp.r, d.format(d.valueMax), TFT_CONST.COLOR.DARKGREY, TFT_CONST.COLOR.BLACK);
+		drawGridValue1(d.disp.c, d.disp.r, d.format(d.valueMin), getValueTextColor(name,1,d.valueMin), getValueTextBgColor(name,1,d.valueMin));
+		drawGridValue2(d.disp.c, d.disp.r, d.format(d.value), getValueTextColor(name,2,d.valueMin), getValueTextBgColor(name,2,d.value));
+		drawGridValue3(d.disp.c, d.disp.r, d.format(d.valueMax), getValueTextColor(name,3,d.valueMin), getValueTextBgColor(name,3,d.valueMax));
 
 		toDraw.shift();
 	}

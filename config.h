@@ -3,7 +3,9 @@
 //#define T70BOARD
 
 // Loging through UDP
-// Put wifissid.txt, wifipass.txt, loghost.txt and logport.txt on a SD card.
+// Put wifissid.txt, wifipass.txt, loghost.txt and logport.txt on an SD card.
+// These are WiFi SSID, WiFi password, UDP log server's IP and
+// UDP log server's port, respectively.
 #define UDP_LOG
 
 // ------------------------------------------------------------------
