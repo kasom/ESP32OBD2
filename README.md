@@ -52,6 +52,7 @@ battery SoC/SoH, HV insulation resistance, etc. and display it on the LCD.
 - From P4 of ESP32S3 board, connect IO17 and IO18 to TX and RX of the transceiver, respectively
 - Connect supply power/ground
 
+  ![Wiring](docs/wiring.png)
   ![Wiring 1](docs/wiring1.png)
   ![Wiring 2](docs/wiring2.png)
   ![Wiring 3](docs/wiring3.png)
