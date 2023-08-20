@@ -35,7 +35,6 @@ battery SoC/SoH, HV insulation resistance, etc. and display it on the LCD.
 - Can be disabled by commenting out `#define UDP_LOG` in `config.h`
 
 **Adapting to other cars**
-- Edit CAN ID constants in `data/firmware/can_ids.js`
 - Edit gateway authentication functions in `auth.ino` and `data/firmware/auth.js`
 - Edit list of requests, expected responses and how to interpret it in `data/firmware/display.js` 
 
