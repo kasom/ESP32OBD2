@@ -26,9 +26,19 @@ battery SoC/SoH, HV insulation resistance, etc. and display it on the LCD.
     `#define CONFIG_ARDUINO_LOOP_STACK_SIZE 16384`
 - For bigger app/LittleFS/SPIFFS partition, edit  `~/Library/Arduino15/packages/esp32/hardware/esp32/2.0.11/boards.txt`
 
-  esp32s3.menu.PartitionScheme.large_spiffs_16MB=Large SPIFFS 16MB (4.5MB APP/6.93MB SPIFFS)
+  `esp32s3.menu.PartitionScheme.large_spiffs_16MB=Large SPIFFS 16MB (4.5MB APP/6.93MB SPIFFS)
   esp32s3.menu.PartitionScheme.large_spiffs_16MB.build.partitions=large_spiffs_16MB
-  esp32s3.menu.PartitionScheme.large_spiffs_16MB.upload.maximum_size=4718592
+  esp32s3.menu.PartitionScheme.large_spiffs_16MB.upload.maximum_size=4718592`
+
+**Flashing from pre-compiled binary**
+- Unpack the zip file from the *Release*
+- Use esptools to flash
+  
+  `~/esptool/esptool.py --chip esp32s3 --port USBPORT --baud BAUD --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 80m --flash_size 16MB 0x0 ESP32OBD2.ino.bootloader.bin 0x8000 ESP32OBD2.ino.partitions.bin 0xe000 boot_app0.bin 0x10000 ESP32OBD2.ino.esp32s3.bin 0x910000 ESP32OBD2.littlefs.bin`
+
+**Updating**
+- To update the firmware, put `ESP32OBD2.ino.esp32s3.bin` or `ESP32OBD2.ino.bin` on the SD card
+- To update the LittleFS, put `littlefs.bin` on the SD card
 
 **Logging of incoming CAN messages via UDP**
 - Create `wifissid.txt`, `wifipass.txt`, `loghost.txt` and `logport.txt` on an SD card. Contains `WiFi SSID`, `WiFi password`, `UDP log server's IP` and `UDP log server's port` respectively
@@ -45,7 +55,7 @@ battery SoC/SoH, HV insulation resistance, etc. and display it on the LCD.
 - Mini USB breakout board
 
 **Wiring**
-- Remove 120 Ohm resister between CAN-H and CAN-L from the CAN bus transceiver (if available)
+- Remove the 120 Ohm resister between CAN-H and CAN-L from the CAN bus transceiver (if available)
 - Connect pin 6 and pin 14 of OBD2 connector to CAN-H and CAN-L of the transceiver, respectively
 - Connect pin 14 of OBD2 connector to CAN-L of the transceiver
 - From P4 of ESP32S3 board, connect IO17 and IO18 to TX and RX of the transceiver, respectively
