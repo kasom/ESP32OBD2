@@ -26,6 +26,7 @@ function processWaitDCDCState() {
 		oldState = currentState;
 		setTopBarLeft(TFT_CONST.COLOR.YELLOW,"Waiting HVB live");
 		setTopBarCenter(TFT_CONST.COLOR.GREEN, "");
+		setTopBarRight(TFT_CONST.COLOR.GREEN, "FW V.: "+fwVersion());
 		requestList['State Watch'].lastState='';
 		requestList['DRL Control'].lastDRL == '';
 	}
@@ -46,6 +47,7 @@ function processWaitDCDCState() {
 				pushed=!digitalRead(GPIO_NUM_0);
 				ret = twai.receive_f(10);
 			} while (!touched && !pushed && typeof ret=='number')
+			setBacklightNormal();
 			wait_DCDC_data.pollCount=0;
 		}
 

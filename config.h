@@ -12,6 +12,15 @@
 // Common
 // ------------------------------------------------------------------
 
+#define FIRMWARE_UPDATE_FILE_NAME "/ESP32OBD2.ino.esp32s3.bin"
+#define FIRMWARE_BACKUP_FILE_NAME "/ESP32OBD2.ino.esp32s3.bak"
+
+#define FIRMWARE2_UPDATE_FILE_NAME "/ESP32OBD2.ino.bin"
+#define FIRMWARE2_BACKUP_FILE_NAME "/ESP32OBD2.ino.bak"
+
+#define LITTLEFS_UPDATE_FILE_NAME "/ESP32OBD2.littlefs.bin"
+#define LITTLEFS_BACKUP_FILE_NAME "/ESP32OBD2.littlefs.bak"
+
 // SD Card interface
 #define SD_MOSI GPIO_NUM_11
 #define SD_MISO GPIO_NUM_13

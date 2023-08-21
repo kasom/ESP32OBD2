@@ -1,9 +1,8 @@
-const char info_text[] PROGMEM = R"rawliteral(
+const double fwVersion PROGMEM = 1.01;
+const char infoText[] PROGMEM = R"rawliteral(
 /*
   ESP32OBD2
 
-  Version 1
-  
   An embedded Javascript platform with OBD-II (CAN) and touch screen LCD support.
 
   https://github.com/kasom/ESP32OBD2
@@ -89,8 +88,6 @@ esp32s3.menu.PartitionScheme.large_spiffs_16MB.upload.maximum_size=4718592
 
 */
 
-String version_string = String("Firmware compiled : ") + String(__DATE__ " " __TIME__ "\n") + "Built for " + "\n";
-
 SPIClass *sd_spi=NULL;
 
 #ifdef TOUCH_SCL
@@ -155,10 +152,16 @@ duk_ret_t native_millis(duk_context *duk_ctx) {
     return 1;
 }
 
+duk_ret_t native_fwVersion(duk_context *duk_ctx) {
+    duk_push_number(duk_ctx, fwVersion);
+    return 1;
+}
+
 void registerNativeFunctions(duk_context *duk_ctx) {
     DUK_ADD_FUNCTION("print", native_print, DUK_VARARGS);
     DUK_ADD_FUNCTION("println", native_println, DUK_VARARGS);
     DUK_ADD_FUNCTION("millis", native_millis, 0);
+    DUK_ADD_FUNCTION("fwVersion", native_fwVersion, 0);
 
     register_esp32_functions(duk_ctx);
     register_led_bl_functions(duk_ctx);
@@ -290,18 +293,24 @@ bool sdInit() {
     return sdOk;
 }
 
-void firmwareUpdate() {
-    printf("\nSearch for firmware..");
-    File firmware =  SD.open("/firmware.bin");
+void updateFromFile(char *fileName,char *backupFileName,int command) {
+    printf("Looking for %s\n",fileName);
+    
+    File firmware =  SD.open(fileName);
+
     if (firmware) {
-      printf("found.\n");
+      printf("Found.\n",fileName);
+      gfx->print("Found ");
+      gfx->setTextColor(GREEN);
+      gfx->print(fileName);
       gfx->setTextColor(WHITE);
-      gfx->println("Found /firmware.bin on SD card. Updating...");
+      gfx->println(" on the SD card. Updating...");
+      gfx->println("The screen might goes crazy during the update.");
       delay(2000);
 
       Update.onProgress(updateProgressCallBack);
 
-      Update.begin(firmware.size(), U_FLASH);
+      Update.begin(firmware.size(), command);
       Update.writeStream(firmware);
       if (Update.end()){
           printf("Update finished!\n");
@@ -317,9 +326,9 @@ void firmwareUpdate() {
 
       firmware.close();
 
-      SD.remove("/firmware.bak");
+      SD.remove(backupFileName);
 
-      if (SD.rename("/firmware.bin", "/firmware.bak")){
+      if (SD.rename(fileName, backupFileName)){
           printf("Firmware rename succesfully!\n");
       } else {
           printf("Firmware rename failed.\n");
@@ -330,6 +339,12 @@ void firmwareUpdate() {
     } else{
         printf("not found!\n");
     }
+}
+
+void firmwareUpdate() {
+  updateFromFile(FIRMWARE_UPDATE_FILE_NAME,FIRMWARE_BACKUP_FILE_NAME,U_FLASH); 
+  updateFromFile(FIRMWARE2_UPDATE_FILE_NAME,FIRMWARE2_BACKUP_FILE_NAME,U_FLASH); 
+  updateFromFile(LITTLEFS_UPDATE_FILE_NAME,LITTLEFS_BACKUP_FILE_NAME,U_SPIFFS); 
 }
 
 void dukInit() {
@@ -367,32 +382,32 @@ void littleFSSetup() {
 }
 
 void setup(void) {
- 
-    // esp_task_wdt_init(60, true);
+  printf("Firmware version %.2f, compiled " __DATE__ " " __TIME__ "\n%s\n",fwVersion,infoText);
+  // esp_task_wdt_init(60, true);
 
-    initLED_BL_LDR();
+  initLED_BL_LDR();
 
 #ifdef TOUCH_SCL
-    tp.begin();
-    tp.setRotation(TP_DEFAULT_ROTATION);
+  tp.begin();
+  tp.setRotation(TP_DEFAULT_ROTATION);
 #endif
 
-    gfx->begin();
-    gfx->setRotation(TFT_DEFAULT_ROTATION);
-    gfx->fillScreen(BLACK);
-    gfx->setTextSize(2 /* x scale */, 2 /* y scale */, 1 /* pixel_margin */);
+  gfx->begin();
+  gfx->setRotation(TFT_DEFAULT_ROTATION);
+  gfx->fillScreen(BLACK);
+  gfx->setTextSize(2 /* x scale */, 2 /* y scale */, 1 /* pixel_margin */);
 
-    if (sdInit()) {
-      firmwareUpdate();
-      networkConfigUpdate();
-    }
-    
-    littleFSSetup();
+  if (sdInit()) {
+    firmwareUpdate();
+    networkConfigUpdate();
+  }
+  
+  littleFSSetup();
 
-    dukInit();
+  dukInit();
 
 #ifdef UDP_LOG
-    networkStart();
+  networkStart();
 #endif
 }
 
