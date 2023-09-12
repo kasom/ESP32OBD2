@@ -38,7 +38,7 @@ battery SoC/SoH, HV insulation resistance, etc. and display it on the LCD.
 
 **Updating**
 - To update the firmware, put `ESP32OBD2.ino.esp32s3.bin` or `ESP32OBD2.ino.bin` on the SD card
-- To update the LittleFS, put `littlefs.bin` on the SD card
+- To update the LittleFS, put `ESP32OBD2.littlefs.bin` on the SD card
 
 **Logging of incoming CAN messages via UDP**
 - Create `wifissid.txt`, `wifipass.txt`, `loghost.txt` and `logport.txt` on an SD card. Contains `WiFi SSID`, `WiFi password`, `UDP log server's IP` and `UDP log server's port` respectively
