@@ -473,7 +473,7 @@ function doNextRequest() {
 		var d = requestList[toDraw[0]];
 
 		drawGridValue1(d.disp.c, d.disp.r, d.format(d.valueMin), getValueTextColor(name,1,d.valueMin), getValueTextBgColor(name,1,d.valueMin));
-		drawGridValue2(d.disp.c, d.disp.r, d.format(d.value), getValueTextColor(name,2,d.valueMin), getValueTextBgColor(name,2,d.value));
+		drawGridValue2(d.disp.c, d.disp.r, d.format(d.value), getValueTextColor(name,2,d.value), getValueTextBgColor(name,2,d.value));
 		drawGridValue3(d.disp.c, d.disp.r, d.format(d.valueMax), getValueTextColor(name,3,d.valueMin), getValueTextBgColor(name,3,d.valueMax));
 
 		toDraw.shift();
