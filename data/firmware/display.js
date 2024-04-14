@@ -14,6 +14,7 @@ const CAN_ID_BMS = 0x7e5;
 const CAN_ID_VCU = 0x7e3;
 const CAN_ID_BCM = 0x740;
 const CAN_ID_GWM = 0x710;
+const CAN_ID_CCU = 0x784;
 const CAN_ID_BROADCAST = 0x7df;
 
 var timeoutCount = 0;
@@ -88,42 +89,42 @@ function noFormat(s) {
 }
 
 // valueNo 1-3 => min / current / max
-function defaultColor(valueNo,value) {
-	if (valueNo==2) return TFT_CONST.COLOR.WHITE;
+function defaultColor(valueNo, value) {
+	if (valueNo == 2) return TFT_CONST.COLOR.WHITE;
 
 	return TFT_CONST.COLOR.DARKGREY;
 }
 
-function defaultBgColor(valueNo,value) {
+function defaultBgColor(valueNo, value) {
 	return TFT_CONST.COLOR.BLACK;
 }
 
-function hvBatSoCColor(valueNo,value) {
-	if (valueNo==2) {
-		if (value>80) {
+function hvBatSoCColor(valueNo, value) {
+	if (valueNo == 2) {
+		if (value > 80) {
 			return TFT_CONST.COLOR.GREEN;
-		} else if (value>60) {
+		} else if (value > 60) {
 			return TFT_CONST.COLOR.GREENYELLOW;
-		} else if (value>40) {
+		} else if (value > 40) {
 			return TFT_CONST.COLOR.YELLOW;
-		} else if (value>20) {
+		} else if (value > 20) {
 			return TFT_CONST.COLOR.RED;
 		} else {
 			return TFT_CONST.COLOR.BLACK;
 		}
 	}
-	return defaultColor(valueNo,value);
+	return defaultColor(valueNo, value);
 }
 
-function hvBatSoCBgColor(valueNo,value) {
-	if (valueNo==2) {
-		if (value>20) {
+function hvBatSoCBgColor(valueNo, value) {
+	if (valueNo == 2) {
+		if (value > 20) {
 			return TFT_CONST.COLOR.BLACK;
 		} else {
 			return TFT_CONST.COLOR.RED;
 		}
 	}
-	return defaultBgColor(valueNo,value);
+	return defaultBgColor(valueNo, value);
 }
 
 var requestList = {
@@ -136,6 +137,13 @@ var requestList = {
 		notify: ['HV Bat Power'],
 		format: twoDecimal
 	},
+	'Acclerator Pedal 1': {
+		label: 'Acclerator Pedal 1',
+		// no display
+		req: { canId: CAN_ID_VCU, msg: [0x03, 0x22, 0xb1, 0x01, 0xaa, 0xaa, 0xaa, 0xaa] },
+		expect: { canId: CAN_ID_VCU + 8, prefix: [0x05, 0x62, 0xb1, 0x01] },
+		decoder: function (id, m) { return ((m[4] << 8) | m[5]); },
+	},
 	'HV Bat Current': {
 		label: 'HVB Curr. (A)',
 		disp: { r: 0, c: 1 },
@@ -145,11 +153,18 @@ var requestList = {
 		notify: ['HV Bat Power'],
 		format: threeDecimal
 	},
+	'Acclerator Pedal 2': {
+		label: 'Acclerator Pedal 2',
+		// no display
+		req: { canId: CAN_ID_VCU, msg: [0x03, 0x22, 0xb1, 0x02, 0xaa, 0xaa, 0xaa, 0xaa] },
+		expect: { canId: CAN_ID_VCU + 8, prefix: [0x05, 0x62, 0xb1, 0x02] },
+		decoder: function (id, m) { return ((m[4] << 8) | m[5]); },
+	},
 	'HV Bat Power': {
-		label: 'HVB Power (W)',
+		label: 'HVB Power (kW)',
 		disp: { r: 0, c: 2 },
-		decoder: function (id, m) { return (typeof (requestList['HV Bat Volt'].value) == 'number' && typeof (requestList['HV Bat Current'].value == 'number')) ? requestList['HV Bat Volt'].value * requestList['HV Bat Current'].value : null },
-		format: twoDecimal
+		decoder: function (id, m) { return (typeof (requestList['HV Bat Volt'].value) == 'number' && typeof (requestList['HV Bat Current'].value == 'number')) ? requestList['HV Bat Volt'].value * requestList['HV Bat Current'].value /1000: null },
+		format: threeDecimal
 	},
 	'HV Bat SoC': {
 		label: 'HVB SoC (%)',
@@ -161,13 +176,20 @@ var requestList = {
 		color: hvBatSoCColor,
 		bgColor: hvBatSoCBgColor
 	},
+	'Brake Pedal Position': {
+		label: 'Break Pedal Position',
+		// no display
+		req: { canId: CAN_ID_VCU, msg: [0x03, 0x22, 0xb1, 0x20, 0xaa, 0xaa, 0xaa, 0xaa] },
+		expect: { canId: CAN_ID_VCU + 8, prefix: [0x05, 0x62, 0xb1, 0x20] },
+		decoder: function (id, m) { return m[4] - 40 },
+	},
 	'HV Bat Cell Min': {
 		label: 'HVB CellMin(V)',
 		disp: { r: 1, c: 0 },
 		req: { canId: CAN_ID_BMS, msg: [0x03, 0x22, 0xb0, 0x59, 0xaa, 0xaa, 0xaa, 0xaa] },
 		expect: { canId: CAN_ID_BMS + 8, prefix: [0x06, 0x62, 0xb0, 0x59] },
 		decoder: function (id, m) { return ((m[4] << 8) | m[5]) * 0.001 },
-		notify: ['HV Cell Diff'],
+		//notify: ['HV Cell Diff'],
 		format: threeDecimal
 	},
 	'HV Bat Cell Max': {
@@ -176,9 +198,10 @@ var requestList = {
 		req: { canId: CAN_ID_BMS, msg: [0x03, 0x22, 0xb0, 0x58, 0xaa, 0xaa, 0xaa, 0xaa] },
 		expect: { canId: CAN_ID_BMS + 8, prefix: [0x06, 0x62, 0xb0, 0x58] },
 		decoder: function (id, m) { return ((m[4] << 8) | m[5]) * 0.001 },
-		notify: ['HV Cell Diff'],
+		//notify: ['HV Cell Diff'],
 		format: threeDecimal
 	},
+	/*
 	'HV Cell Diff': {
 		label: 'HVB CellDif(V)',
 		disp: { r: 1, c: 2 },
@@ -188,7 +211,15 @@ var requestList = {
 		},
 		format: threeDecimal
 	},
-
+	*/
+	'Air Compressor Current (A)': {
+		label: 'Air C. Cur (A)',
+		disp: { r: 1, c: 2 },
+		req: { canId: CAN_ID_VCU, msg: [0x03, 0x22, 0xbb, 0x01, 0xaa, 0xaa, 0xaa, 0xaa] },
+		expect: { canId: CAN_ID_VCU + 8, prefix: [0x05, 0x62, 0xbb, 0x01] },
+		decoder: function (id, m) { return ((m[4] << 8) | m[5]) * 0.025 },
+		format: threeDecimal
+	},
 	'HV Bat SoH': {
 		label: 'HVB SoH (%)',
 		disp: { r: 1, c: 3 },
@@ -225,6 +256,14 @@ var requestList = {
 		},
 		format: oneDecimal
 	},
+	'DC-DC HV Input Current': {
+		label: 'DC-DC HV In(A)',
+		//disp: { r: 2, c: 2 },
+		req: { canId: CAN_ID_VCU, msg: [0x03, 0x22, 0xb5, 0x81, 0xaa, 0xaa, 0xaa, 0xaa] },
+		expect: { canId: CAN_ID_VCU + 8, prefix: [0x05, 0x62, 0xb5, 0x81] },
+		decoder: function (id, m) { return (((m[4] << 8) | m[5]) - 0x7fff) * 0.1 },
+		format: threeDecimal
+	},
 
 	'DC-DC Temperature': {
 		label: 'DC-DC Temp.(C)',
@@ -233,6 +272,14 @@ var requestList = {
 		expect: { canId: CAN_ID_VCU + 8, prefix: [0x04, 0x62, 0xB5, 0x87] },
 		decoder: function (id, m) { return m[4] - 40 },
 		format: noDecimal
+	},
+
+	'AC Input Current': {
+		label: 'AC I',
+		// no display
+		req: { canId: CAN_ID_CCU, msg: [0x03, 0x22, 0xb0, 0x01, 0xaa, 0xaa, 0xaa, 0xaa ] },
+		expect: { canId: CAN_ID_CCU + 8, prefix: [0x05, 0x62, 0xb0, 0x01] },
+		decoder: function (id, m) { return m[4]/5  },
 	},
 
 	'Motor Torque': {
@@ -267,6 +314,13 @@ var requestList = {
 		decoder: function (id, m) { return ((m[4] << 8) | m[5]) * 0.5 },
 		format: oneDecimal
 	},
+	'AC Input Voltage': {
+		label: 'AC V',
+		// no display
+		req: { canId: CAN_ID_CCU, msg: [0x03, 0x22, 0xb0, 0x10, 0xaa, 0xaa, 0xaa, 0xaa ] },
+		expect: { canId: CAN_ID_CCU + 8, prefix: [0x05, 0x62, 0xb0, 0x10] },
+		decoder: function (id, m) { return (((m[4] << 8) | m[5]) * 0.01).toFixed(1) },
+	},
 
 	'Motor Temperature': {
 		label: 'Motor Temp.(C)',
@@ -276,6 +330,16 @@ var requestList = {
 		decoder: function (id, m) { return m[4] - 40 },
 		format: noDecimal
 	},
+	/*
+	'Inverter Temperature': {
+		label: 'Inver.Temp.(C)',
+		// no display
+		req: { canId: CAN_ID_VCU, msg: [0x03, 0x22, 0xb4, 0x07, 0xaa, 0xaa, 0xaa, 0xaa] },
+		expect: { canId: CAN_ID_VCU + 8, prefix: [0x04, 0x62, 0xB4, 0x05] },
+		decoder: function (id, m) { return m[4] - 40 },
+		format: noDecimal
+	},
+	*/
 	'Motor Coolant Temperature': {
 		label: 'M. Cool. T.(C)',
 		disp: { r: 4, c: 1 },
@@ -283,6 +347,13 @@ var requestList = {
 		expect: { canId: CAN_ID_VCU + 8, prefix: [0x04, 0x62, 0xB3, 0x09] },
 		decoder: function (id, m) { return m[4] - 40 },
 		format: noDecimal
+	},
+	'CCU HV V': {
+		label: 'CCU HV V',
+		// no display
+		req: { canId: CAN_ID_CCU, msg: [0x03, 0x22, 0xb0, 0x00, 0xaa, 0xaa, 0xaa, 0xaa] },
+		expect: { canId: CAN_ID_CCU + 8, prefix: [0x05, 0x62, 0xb0, 0x00] },
+		decoder: function (id, m) { return ((m[4] << 8) | m[5]) / 50 },
 	},
 	'HV Temperature': {
 		label: 'HV Temp. (C)',
@@ -300,16 +371,14 @@ var requestList = {
 		decoder: function (id, m) { return (m[4] * 0.5 - 40) },
 		format: oneDecimal
 	},
-
 	'Outside Temperature': {
 		label: 'Outside T (C)',
 		// no display
-		req: { canId: CAN_ID_VCU, msg: [0x03,0x22,0xbb,0x05,0xaa,0xaa,0xaa,0xaa] },
+		req: { canId: CAN_ID_VCU, msg: [0x03, 0x22, 0xbb, 0x05, 0xaa, 0xaa, 0xaa, 0xaa] },
 		expect: { canId: CAN_ID_VCU + 8, prefix: [0x04, 0x62, 0xbb, 0x05] },
 		decoder: function (id, m) { return m[4] - 40 },
 		format: oneDecimal
 	},
-
 	'Gear Position': {
 		label: 'Gear Position',
 		// no display
@@ -353,6 +422,38 @@ var requestList = {
 		expect: { canId: CAN_ID_VCU + 8, prefix: [0x06, 0x62, 0xe1, 0x01] },
 		decoder: function (id, m) { return (m[4] << 16) | (m[5] << 8) | m[6] }
 	},
+
+	'Brake pressure': {
+		label: 'Brake Pressure',
+		// no display
+		req: { canId: CAN_ID_VCU, msg: [0x03, 0x22, 0xba, 0x01, 0xaa, 0xaa, 0xaa, 0xaa] },
+		expect: { canId: CAN_ID_VCU + 8, prefix: [0x05, 0x62, 0xba, 0x01] },
+		decoder: function (id, m) { return (m[4] << 8) | m[5] }
+	},
+	'AC Pressure': {
+		label: 'AC Pressure',
+		// no display
+		req: { canId: CAN_ID_VCU, msg: [0x03, 0x22, 0xbb, 0x0a, 0xaa, 0xaa, 0xaa, 0xaa] },
+		expect: { canId: CAN_ID_VCU + 8, prefix: [0x05, 0x62, 0xbb, 0x0a] },
+		decoder: function (id, m) { return (m[4] << 8) | m[5] }
+	},
+	'Coolant pump relay': {
+		label: 'Coolant pump relay',
+		// no display
+		req: { canId: CAN_ID_VCU, msg: [0x03, 0x22, 0xbb, 0x90, 0xaa, 0xaa, 0xaa, 0xaa] },
+		expect: { canId: CAN_ID_VCU + 8, prefix: [0x04, 0x62, 0xbb, 0x90] },
+		decoder: function (id, m) { return m[4] },
+	},
+	'Cooling fan': {
+		label: 'Cooling fan',
+		// no display
+		req: { canId: CAN_ID_VCU, msg: [0x03, 0x22, 0xbb, 0x91, 0xaa, 0xaa, 0xaa, 0xaa] },
+		expect: { canId: CAN_ID_VCU + 8, prefix: [0x04, 0x62, 0xbb, 0x91] },
+		decoder: function (id, m) { return m[4] - 40 },
+	},
+
+
+
 	'DRL Control': {
 		label: 'DRL Control',
 		// no display
@@ -368,7 +469,7 @@ var requestList = {
 						setTopBarCenter(TFT_CONST.COLOR.YELLOW, "DRL off");
 					}
 				} else {
-					sendTesterPresent();
+					sendTesterPresent(CAN_ID_BCM);
 				}
 			} else {
 				if (requestList['DRL Control'].lastDRL == 'off') {
@@ -394,6 +495,9 @@ var requestList = {
 				}
 				requestList['State Watch'].lastState = chargingStatus;
 				setTopBarLeft(color, chargingStatus);
+			}
+			if ((chargingStatus == 'Charging' || chargingStatus == 'Rapid charging')) {
+				sendTesterPresent(CAN_ID_GWM);
 			}
 		},
 		lastState: ''
@@ -431,19 +535,19 @@ function prefixMatch(data, prefix) {
 	return true;
 }
 
-function getValueTextColor(requestName,valueNo,value) {
-	if (typeof requestList[requestName].color=='function') {
-		return requestList[requestName].color(valueNo,value);
+function getValueTextColor(requestName, valueNo, value) {
+	if (typeof requestList[requestName].color == 'function') {
+		return requestList[requestName].color(valueNo, value);
 	} else {
-		return defaultColor(valueNo,value);
+		return defaultColor(valueNo, value);
 	}
 }
 
-function getValueTextBgColor(requestName,valueNo,value) {
-	if (typeof requestList[requestName].bgColor=='function') {
-		return requestList[requestName].bgColor(valueNo,value);
+function getValueTextBgColor(requestName, valueNo, value) {
+	if (typeof requestList[requestName].bgColor == 'function') {
+		return requestList[requestName].bgColor(valueNo, value);
 	} else {
-		return defaultBgColor(valueNo,value);
+		return defaultBgColor(valueNo, value);
 	}
 }
 
@@ -469,12 +573,12 @@ function doNextRequest() {
 
 	while (toDraw.length != 0) {
 		// update the display
-		var name=toDraw[0];
+		var name = toDraw[0];
 		var d = requestList[toDraw[0]];
 
-		drawGridValue1(d.disp.c, d.disp.r, d.format(d.valueMin), getValueTextColor(name,1,d.valueMin), getValueTextBgColor(name,1,d.valueMin));
-		drawGridValue2(d.disp.c, d.disp.r, d.format(d.value), getValueTextColor(name,2,d.value), getValueTextBgColor(name,2,d.value));
-		drawGridValue3(d.disp.c, d.disp.r, d.format(d.valueMax), getValueTextColor(name,3,d.valueMax), getValueTextBgColor(name,3,d.valueMax));
+		drawGridValue1(d.disp.c, d.disp.r, d.format(d.valueMin), getValueTextColor(name, 1, d.valueMin), getValueTextBgColor(name, 1, d.valueMin));
+		drawGridValue2(d.disp.c, d.disp.r, d.format(d.value), getValueTextColor(name, 2, d.value), getValueTextBgColor(name, 2, d.value));
+		drawGridValue3(d.disp.c, d.disp.r, d.format(d.valueMax), getValueTextColor(name, 3, d.valueMax), getValueTextBgColor(name, 3, d.valueMax));
 
 		toDraw.shift();
 	}
@@ -503,13 +607,14 @@ function doNextRequest() {
 		} while (!sastified && millis() < timeout);
 		if (!sastified) {
 			println("Timed out!");
+			setTopBarRight(TFT_CONST.COLOR.RED, crq.label);
 			timeoutCount++;
 			if (timeoutCount >= MAX_TIMEOUT_COUNT) {
 				currentState = APP_STATE_WAIT_DCDC;
 				setTopBarRight(TFT_CONST.COLOR.RED, "ECU NOT RESPONDING");
 			}
 		} else {
-			timeoutCount=0;
+			timeoutCount = 0;
 		}
 	}
 }

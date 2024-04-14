@@ -1,14 +1,17 @@
-#ifdef UDP_LOG
+#ifdef USE_WIFI
 
 #define NETWORK_PREF "OBD2WiFi"
 
+#ifdef UDP_LOG
 WiFiUDP wifiUDP;
+char can2udpIP[128]="";
+uint16_t can2udpPort=0;
+#endif
+
 bool wifiOn=false;
 bool wifiWasDisconnected=false;
 String localIP="";
 unsigned long previousMillisWifiRetry = 0;
-char can2udpIP[128]="";
-uint16_t can2udpPort=0;
 
 void networkConfigUpdate() {
   Preferences preferences;
@@ -33,6 +36,7 @@ void networkConfigUpdate() {
     SD.remove("/wifipass.txt");
   }
 
+#ifdef UDP_LOG
   f=SD.open("/loghost.txt");
   if (f) {
     String t=f.readString();
@@ -50,6 +54,8 @@ void networkConfigUpdate() {
     f.close();
     SD.remove("/logport.txt");
   }
+#endif
+
   preferences.end();
 }
 
@@ -90,8 +96,10 @@ void networkStart() {
 
   String wifissid=preferences.getString("wifissid","");
   String wifipass=preferences.getString("wifipass","");
+#ifdef UDP_LOG
   String loghost=preferences.getString("loghost","");
   int logport=preferences.getInt("logport",1234);
+#endif
 
   preferences.end();
 
@@ -99,7 +107,9 @@ void networkStart() {
 
   if (wifissid=="") { printf("No wifissid configured.\n"); ok=false; }
   if (wifipass=="") { printf("No wifipass configured.\n"); ok=false; }
+#ifdef UDP_LOG
   if (loghost=="") { printf("No loghost configured.\n"); ok=false; }
+#endif
 
   if (ok) {
     char ap_ssid[128];

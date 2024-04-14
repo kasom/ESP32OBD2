@@ -58,8 +58,8 @@ function gwmAuth(timeout) {
 	return isSuccess;
 }
 
-function sendTesterPresent() {
-	twai_tx(CAN_ID_BCM, [0x02, 0x3e, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
+function sendTesterPresent(id) {
+	twai_tx(id, [0x02, 0x3e, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
 }
 
 function startDrlTurnOff() {
@@ -89,7 +89,7 @@ function drlOff(timeout) {
 			} else {
 				if (d[0] == 0x06 && (d[1] & 0xbf) == 0x10 && d[2] == 0x03) {
 					authDebug("BCM: TESTERPRESENT & requesting seed");
-					sendTesterPresent();
+					sendTesterPresent(CAN_ID_BCM);
 					twai_tx(CAN_ID_BCM, [0x02, 0x27, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00]);
 				}  else if (d[0] == 0x06 && (d[1] & 0xbf) == 0x27 && d[2] == 0x01) {
 					var seed = (d[3] << 24) | (d[4] << 16) | (d[5] << 8) | d[6];
@@ -131,7 +131,7 @@ function drlOff(timeout) {
 					authDebug("BCM: Second multi-frame response received. Total DRL response = "
 						+ drlResponse[0].toString(16) + " " + drlResponse[1].toString(16) + " " + drlResponse[2].toString(16) + " " + drlResponse[3].toString(16) + " " + drlResponse[4].toString(16));
 
-					sendTesterPresent();
+					sendTesterPresent(CAN_ID_BCM);
 
 					// make sure that nothing left?
 					twai_tx(CAN_ID_BCM, [0x30, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);

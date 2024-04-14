@@ -1,3 +1,4 @@
+#ifdef HAS_DISPLAY
 
 duk_ret_t native_tft_setTextColor(duk_context *duk_ctx) {
     int n = duk_get_top(duk_ctx);  // #args
@@ -168,17 +169,13 @@ duk_ret_t native_tft_setRotation(duk_context *duk_ctx) {
 }
 
 duk_ret_t native_tft_getRotation(duk_context *duk_ctx) {
-#ifdef TOUCH_SCL
     duk_push_int(duk_ctx, gfx->getRotation());
-#else
-    duk_push_int(0);
-#endif
 
     return 1;
 }
 
 duk_ret_t native_setTouchRotation(duk_context *duk_ctx) {
-#ifdef TOUCH_SCL
+#ifdef USE_TAMC_GT911
     tp.setRotation(duk_get_int(duk_ctx, -1));
 #endif
 
@@ -188,7 +185,7 @@ duk_ret_t native_setTouchRotation(duk_context *duk_ctx) {
 duk_ret_t native_getTouches(duk_context *duk_ctx) {
     duk_idx_t arr_idx = duk_push_array(duk_ctx);
 
-#ifdef TOUCH_SCL
+#ifdef USE_TAMC_GT911
     tp.read();
     if (tp.isTouched) {
         for (int i = 0; i < tp.touches; i++) {
@@ -211,10 +208,12 @@ duk_ret_t native_getTouches(duk_context *duk_ctx) {
 
     return 1;
 }
+#endif
 
 void register_tft_functions(duk_context *duk_ctx) {
     duk_idx_t o_idx = duk_push_object(duk_ctx);
 
+#ifdef HAS_DISPLAY
     DUK_ADD_OBJ_FUNCTION(o_idx, "setTextColor", native_tft_setTextColor, DUK_VARARGS);
     DUK_ADD_OBJ_FUNCTION(o_idx, "setTextSize", native_tft_setTextSize, DUK_VARARGS);
     DUK_ADD_OBJ_FUNCTION(o_idx, "fillScreen", native_tft_fillScreen, 1);
@@ -242,6 +241,7 @@ void register_tft_functions(duk_context *duk_ctx) {
     DUK_ADD_OBJ_FUNCTION(o_idx, "setTextWrap", native_tft_setTextWrap, 1);
     DUK_ADD_OBJ_FUNCTION(o_idx, "setRotation", native_tft_setRotation, 1);
     DUK_ADD_OBJ_FUNCTION(o_idx, "getRotation", native_tft_getRotation, 0);
+#endif
 
     duk_put_global_string(duk_ctx, "gfx");
 }

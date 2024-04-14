@@ -16,7 +16,7 @@ int ldrReadMilliVolts() {
 }
 
 void setLedRgb(int r, int g, int b) {
-#ifdef T35BOARD
+#ifdef ESP32_3248S035
     ledcWrite(LED_R_PWM_CHANNEL, r);
     ledcWrite(LED_G_PWM_CHANNEL, g);
     ledcWrite(LED_B_PWM_CHANNEL, b);
@@ -42,7 +42,7 @@ duk_ret_t native_ldrReadMilliVolts(duk_context *duk_ctx) {
 }
 
 void initLED_BL_LDR() {
-#ifdef T35BOARD
+#ifdef ESP32_3248S035
     analogReadResolution(12);
     ledcSetup(LED_R_PWM_CHANNEL, PWM_FREQUENCY, PWM_RESOLUTION);
     ledcSetup(LED_G_PWM_CHANNEL, PWM_FREQUENCY, PWM_RESOLUTION);
@@ -54,11 +54,14 @@ void initLED_BL_LDR() {
     ledcWrite(LED_G_PWM_CHANNEL, 255);
     ledcWrite(LED_B_PWM_CHANNEL, 255);
 #endif
+#ifdef LCD_BL_PIN
     ledcSetup(LCD_BL_PWM_CHANNEL, PWM_FREQUENCY, PWM_RESOLUTION);
     ledcAttachPin(LCD_BL_PIN, LCD_BL_PWM_CHANNEL);
     ledcWrite(LCD_BL_PWM_CHANNEL, 127);
+#endif
 }
 
+#ifdef LCD_BL_PWM_CHANNEL
 duk_ret_t native_setBacklight(duk_context *duk_ctx) {
     int n = duk_get_top(duk_ctx);  // #args
 
@@ -66,6 +69,7 @@ duk_ret_t native_setBacklight(duk_context *duk_ctx) {
 
     return 0;
 }
+#endif
 
 void register_led_bl_functions(duk_context *duk_ctx) {
     duk_push_c_function(duk_ctx, native_setLedRgb, 3);
@@ -74,6 +78,8 @@ void register_led_bl_functions(duk_context *duk_ctx) {
     duk_put_global_string(duk_ctx, "ldrRead");
     duk_push_c_function(duk_ctx, native_ldrReadMilliVolts, 0);
     duk_put_global_string(duk_ctx, "ldrReadMilliVolts");
+#ifdef LCD_BL_PWM_CHANNEL
     duk_push_c_function(duk_ctx, native_setBacklight, 1);
     duk_put_global_string(duk_ctx, "setBacklight");
+#endif
 }
