@@ -6,20 +6,20 @@ battery SoC/SoH, HV insulation resistance, etc. and display it on the LCD.
   ![Wiring 1](docs/running.png)
 
 ***Work in Progress***
-- Needs better documents
+- Needs better documents.
 - Better UI (menu, icon, etc)
 - ISO-TP
 - DTC view/clear
 - Graphs/visualization
 - Local logging on SD card or LittleFS
-- The empty space on the left side of the screen is for menu buttons
+- The empty space on the left side of the screen is for menu buttons.
 
 **Compiling**
-- Requires Arduino IDE, version 1.8.19
-- Requires esp32 by Espressif Systems, version 2.0.11
-- Requires GFX_Library for Arduino by Moon On Our Nation, version 1.3.7
-- Requires TAMC_GT911 by TAMC, version 1.0.2
-- Must increase the stack size in *sdkconfig.h*
+- Requires Arduino IDE, version 1.8.19.
+- Requires esp32 by Espressif Systems, version 2.0.11.
+- Requires GFX_Library for Arduino by Moon On Our Nation, version 1.3.7.
+- Requires TAMC_GT911 by TAMC, version 1.0.2.
+- Must increase the stack size in *sdkconfig.h*.
   
    `~/Library/Arduino15/packages/esp32/hardware/esp32/2.0.11/tools/sdk/esp32s3/qio_opi/include/sdkconfig.h`
   
@@ -31,35 +31,39 @@ battery SoC/SoH, HV insulation resistance, etc. and display it on the LCD.
   esp32s3.menu.PartitionScheme.large_spiffs_16MB.upload.maximum_size=4718592`
 
 **Flashing from pre-compiled binary**
-- Unpack the zip file from the *Release*
-- Use esptools to flash
+- Unpack the zip file from the *Release*.
+- Use esptools to flash.
   
   `~/esptool/esptool.py --chip esp32s3 --port USBPORT --baud BAUD --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 80m --flash_size 16MB 0x0 ESP32OBD2.ino.bootloader.bin 0x8000 ESP32OBD2.ino.partitions.bin 0xe000 boot_app0.bin 0x10000 ESP32OBD2.ino.esp32s3.bin 0x910000 ESP32OBD2.littlefs.bin`
 
 **Updating**
-- To update the firmware, put `ESP32OBD2.ino.esp32s3.bin` or `ESP32OBD2.ino.bin` on the SD card
-- To update the LittleFS, put `ESP32OBD2.littlefs.bin` on the SD card
+- To update the firmware, put `ESP32OBD2.ino.esp32s3.bin` or `ESP32OBD2.ino.bin` on the SD card.
+- To update the LittleFS, put `ESP32OBD2.littlefs.bin` on the SD card.
 
 **Logging of incoming CAN messages via UDP**
-- Create `wifissid.txt`, `wifipass.txt`, `loghost.txt` and `logport.txt` on an SD card. Contains `WiFi SSID`, `WiFi password`, `UDP log server's IP` and `UDP log server's port` respectively
-- Can be disabled by commenting out `#define UDP_LOG` in `config.h`
+- Create `wifissid.txt`, `wifipass.txt`, `loghost.txt` and `logport.txt` on an SD card. Contains `WiFi SSID`, `WiFi password`, `UDP log server's IP` and `UDP log server's port` respectively.
+- Can be disabled by commenting out `#define UDP_LOG` in `config.h`.
+
+**CAN bus monitor mode**
+- When the car is off, press the boot button on the back to switch to CAN bus monitor mode.
+- Incoming messages will be displayed on screen and logging via UDP (if enabled).
 
 **Adapting to other cars**
-- Edit gateway authentication functions in `auth.ino` and `data/firmware/auth.js`
-- Edit list of requests, expected responses and how to interpret it in `data/firmware/display.js` 
+- Edit gateway authentication functions in `auth.ino` and `data/firmware/auth.js`.
+- Edit list of requests, expected responses and how to interpret it in `data/firmware/display.js`.
 
 **Hardware**
-- ESP32S3-8048S050 (5 inch, 800x480 LCD, 16MB flash, 8MB PSRAM)
-- CAN bus transceiver module (3.3V)
-- OBD2 to Mini USB cable
-- Mini USB breakout board
+- ESP32S3-8048S050 (5 inch, 800x480 LCD, 16MB flash, 8MB PSRAM).
+- CAN bus transceiver module (3.3V).
+- OBD2 to Mini USB cable.
+- Mini USB breakout board.
 
 **Wiring**
-- Remove the 120 Ohm resister between CAN-H and CAN-L from the CAN bus transceiver (if available)
-- Connect pin 6 and pin 14 of OBD2 connector to CAN-H and CAN-L of the transceiver, respectively
-- Connect pin 14 of OBD2 connector to CAN-L of the transceiver
-- From P4 of ESP32S3 board, connect IO17 and IO18 to TX and RX of the transceiver, respectively
-- Connect supply power/ground
+- Remove the 120 Ohm resister between CAN-H and CAN-L from the CAN bus transceiver (if available).
+- Connect pin 6 and pin 14 of OBD2 connector to CAN-H and CAN-L of the transceiver, respectively.
+- Connect pin 14 of OBD2 connector to CAN-L of the transceiver.
+- From P4 of ESP32S3 board, connect IO17 and IO18 to TX and RX of the transceiver, respectively.
+- Connect supply power/ground.
 
   ![Wiring](docs/wiring.png)
   ![Wiring 1](docs/wiring1.png)
